@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboards - LastPixel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-mid: #16161f;
+            --accent-cyan: #00ffff;
+            --accent-pink: #ff006e;
+            --accent-yellow: #ffbe0b;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-mid);
+            border: 2px solid var(--accent-cyan);
+        }
+
+        .leaderboard-table thead {
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .leaderboard-table th {
+            padding: 1.5rem 1rem;
+            text-align: left;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+        }
+
+        .leaderboard-table td {
+            padding: 1.2rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-table tbody tr:hover {
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .rank {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.2rem;
+            width: 80px;
+        }
+
+        .rank-1 { color: var(--accent-yellow); }
+        .rank-2 { color: #c0c0c0; }
+        .rank-3 { color: #cd7f32; }
+
+        .username {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .placements {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-family: 'Press Start 2P', monospace;
+            color: var(--accent-cyan);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.3rem;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 0.8rem 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .rank {
+                font-size: 1rem;
+                width: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Home</a>
+        
+        <h1>Leaderboards</h1>
+        <p class="subtitle">Top Contributors by Lifetime Paid Placements</p>
+
+        <div id="loadingIndicator" class="loading">Loading leaderboard...</div>
+
+        <table class="leaderboard-table" id="leaderboardTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Username</th>
+                    <th>Placements</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+            </tbody>
+        </table>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <p>No contributors yet. Be the first!</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch('/leaderboard?limit=100');
+                const data = await response.json();
+
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                if (data.leaderboard.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                const tbody = document.getElementById('leaderboardBody');
+                const table = document.getElementById('leaderboardTable');
+
+                data.leaderboard.forEach(entry => {
+                    const row = document.createElement('tr');
+                    
+                    const rankClass = entry.rank <= 3 ? `rank-${entry.rank}` : '';
+                    const rankEmoji = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : '';
+                    
+                    row.innerHTML = `
+                        <td class="rank ${rankClass}">${rankEmoji} #${entry.rank}</td>
+                        <td class="username">${entry.username}</td>
+                        <td class="placements">${entry.placements.toLocaleString()}</td>
+                        <td>${new Date(entry.joined).toLocaleDateString()}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+
+                table.style.display = 'table';
+            } catch (error) {
+                console.error('Failed to load leaderboard:', error);
+                document.getElementById('loadingIndicator').textContent = 'Failed to load';
+            }
+        }
+
+        loadLeaderboard();
+    </script>
+</body>
+</html>
