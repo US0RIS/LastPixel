@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archives - LastPixel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-mid: #16161f;
+            --accent-cyan: #00ffff;
+            --accent-pink: #ff006e;
+            --accent-yellow: #ffbe0b;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        .archives-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .archive-card {
+            background: var(--bg-mid);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .archive-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .archive-preview {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #16161f;
+            border: 2px solid var(--accent-cyan);
+            margin-bottom: 1rem;
+            image-rendering: pixelated;
+        }
+
+        .archive-info {
+            font-size: 0.9rem;
+        }
+
+        .archive-info h3 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            margin-bottom: 0.8rem;
+        }
+
+        .archive-info p {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .archive-info strong {
+            color: var(--text-primary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-family: 'Press Start 2P', monospace;
+            color: var(--accent-cyan);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg-mid);
+            border: 2px solid var(--accent-cyan);
+            padding: 2rem;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1rem;
+            color: var(--accent-cyan);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--accent-pink);
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-canvas {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #16161f;
+            border: 2px solid var(--accent-cyan);
+            margin-bottom: 1.5rem;
+            image-rendering: pixelated;
+        }
+
+        .modal-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.2rem;
+            color: var(--accent-cyan);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .archives-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Home</a>
+        
+        <h1>Archives</h1>
+        <p class="subtitle">Weekly Board Snapshots</p>
+
+        <div id="loadingIndicator" class="loading">Loading archives...</div>
+
+        <div class="archives-grid" id="archivesGrid"></div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <p>No archives yet. The first snapshot will be created after the first weekly reset.</p>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="archiveModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Archive Details</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <canvas class="modal-canvas" id="modalCanvas"></canvas>
+            <div class="modal-stats" id="modalStats"></div>
+        </div>
+    </div>
+
+    <script>
+        let archives = [];
+
+        async function loadArchives() {
+            try {
+                const response = await fetch('/archives');
+                const data = await response.json();
+
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                if (data.archives.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                archives = data.archives;
+                renderArchives();
+            } catch (error) {
+                console.error('Failed to load archives:', error);
+                document.getElementById('loadingIndicator').textContent = 'Failed to load';
+            }
+        }
+
+        function renderArchives() {
+            const grid = document.getElementById('archivesGrid');
+            
+            archives.forEach(archive => {
+                const card = document.createElement('div');
+                card.className = 'archive-card';
+                card.onclick = () => openArchive(archive.id);
+
+                const weekEnd = new Date(archive.week_end);
+                
+                card.innerHTML = `
+                    <canvas class="archive-preview" id="preview-${archive.id}" width="200" height="200"></canvas>
+                    <div class="archive-info">
+                        <h3>Week of ${weekEnd.toLocaleDateString()}</h3>
+                        <p><strong>${archive.total_placements.toLocaleString()}</strong> placements</p>
+                        <p><strong>${archive.unique_contributors}</strong> contributors</p>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+
+                // Load preview thumbnail
+                loadArchivePreview(archive.id);
+            });
+        }
+
+        async function loadArchivePreview(archiveId) {
+            try {
+                const response = await fetch(`/archives/${archiveId}`);
+                const data = await response.json();
+
+                const canvas = document.getElementById(`preview-${archiveId}`);
+                const ctx = canvas.getContext('2d');
+
+                ctx.fillStyle = '#16161f';
+                ctx.fillRect(0, 0, 200, 200);
+
+                const scale = 200 / 1024;
+
+                data.pixels.forEach(pixel => {
+                    ctx.fillStyle = pixel.color;
+                    ctx.fillRect(
+                        Math.floor(pixel.x * scale),
+                        Math.floor(pixel.y * scale),
+                        Math.ceil(scale),
+                        Math.ceil(scale)
+                    );
+                });
+            } catch (error) {
+                console.error('Failed to load preview:', error);
+            }
+        }
+
+        async function openArchive(archiveId) {
+            try {
+                const response = await fetch(`/archives/${archiveId}`);
+                const data = await response.json();
+
+                const weekEnd = new Date(data.week_end);
+                document.getElementById('modalTitle').textContent = 
+                    `Week of ${weekEnd.toLocaleDateString()}`;
+
+                // Render full canvas
+                const canvas = document.getElementById('modalCanvas');
+                canvas.width = 800;
+                canvas.height = 800;
+                const ctx = canvas.getContext('2d');
+
+                ctx.fillStyle = '#16161f';
+                ctx.fillRect(0, 0, 800, 800);
+
+                const scale = 800 / 1024;
+
+                data.pixels.forEach(pixel => {
+                    ctx.fillStyle = pixel.color;
+                    ctx.fillRect(
+                        Math.floor(pixel.x * scale),
+                        Math.floor(pixel.y * scale),
+                        Math.ceil(scale),
+                        Math.ceil(scale)
+                    );
+                });
+
+                // Show stats
+                document.getElementById('modalStats').innerHTML = `
+                    <div class="stat-box">
+                        <span class="stat-value">${data.total_placements.toLocaleString()}</span>
+                        <span class="stat-label">Total Placements</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value">${data.unique_contributors}</span>
+                        <span class="stat-label">Contributors</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value">${data.votes}</span>
+                        <span class="stat-label">Votes</span>
+                    </div>
+                `;
+
+                document.getElementById('archiveModal').classList.add('active');
+            } catch (error) {
+                console.error('Failed to load archive:', error);
+                alert('Failed to load archive');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('archiveModal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('archiveModal').addEventListener('click', (e) => {
+            if (e.target.id === 'archiveModal') {
+                closeModal();
+            }
+        });
+
+        loadArchives();
+    </script>
+</body>
+</html>
