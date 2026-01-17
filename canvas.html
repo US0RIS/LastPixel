@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas - LastPixel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-mid: #16161f;
+            --accent-cyan: #00ffff;
+            --accent-pink: #ff006e;
+            --accent-yellow: #ffbe0b;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            padding: 1rem 2rem;
+            border-bottom: 2px solid var(--accent-cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            background: var(--bg-mid);
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h1 a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .credit-display {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-yellow);
+        }
+
+        .reset-timer {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-cyan);
+        }
+
+        .btn {
+            padding: 0.6rem 1.5rem;
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+            border: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        #buyCreditsBtn {
+            background: var(--accent-yellow);
+        }
+
+        #buyCreditsBtn:hover {
+            box-shadow: 0 4px 15px rgba(255, 190, 11, 0.4);
+        }
+
+        /* Main Canvas Area */
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-mid);
+        }
+
+        #pixelCanvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            cursor: crosshair;
+            border: 2px solid var(--accent-cyan);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: var(--bg-mid);
+            border-left: 2px solid var(--accent-cyan);
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                position: absolute;
+                right: -320px;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transition: right 0.3s;
+            }
+            
+            .sidebar.open {
+                right: 0;
+            }
+        }
+
+        .section {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            background: rgba(0, 255, 255, 0.02);
+        }
+
+        .section h3 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .color-option {
+            aspect-ratio: 1;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-cyan);
+        }
+
+        .color-option.selected {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 10px var(--accent-yellow);
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            cursor: pointer;
+            border: 2px solid var(--accent-cyan);
+        }
+
+        .ad-toggle {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .ad-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .ad-toggle label {
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        /* Pixel Info */
+        .pixel-info {
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .pixel-info p {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .pixel-info strong {
+            color: var(--accent-cyan);
+        }
+
+        .no-pixel-selected {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* Place Button */
+        .place-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent-pink);
+            color: white;
+            border: none;
+            font-weight: 800;
+            font-size: 1rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+
+        .place-btn:hover:not(:disabled) {
+            background: var(--accent-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .place-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Undo and Report Buttons */
+        .undo-btn, .report-btn {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+        }
+
+        .undo-btn {
+            background: var(--accent-yellow);
+            color: var(--bg-dark);
+        }
+
+        .undo-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 190, 11, 0.4);
+        }
+
+        .report-btn {
+            background: rgba(255, 0, 110, 0.2);
+            color: var(--accent-pink);
+            border: 1px solid var(--accent-pink);
+        }
+
+        .report-btn:hover:not(:disabled) {
+            background: var(--accent-pink);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .undo-btn:disabled, .report-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-mid);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.7rem;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            border-color: var(--accent-pink);
+            color: var(--accent-pink);
+        }
+
+        .notification.success {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1rem;
+            color: var(--accent-cyan);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Zoom controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-mid);
+            border: 2px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .zoom-btn:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner">Loading Canvas...</div>
+    </div>
+
+    <header>
+        <h1><a href="/">LastPixel</a></h1>
+        <div class="user-info">
+            <span class="credit-display" id="creditDisplay">Credits: 0</span>
+            <span class="reset-timer" id="resetTimer">Reset: --:--:--</span>
+            <button class="btn" id="buyCreditsBtn" style="display: none;">Buy Credits</button>
+            <button class="btn" id="loginBtn">Login</button>
+        </div>
+    </header>
+
+    <div class="canvas-container">
+        <div class="canvas-wrapper">
+            <canvas id="pixelCanvas"></canvas>
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoomIn">+</button>
+                <button class="zoom-btn" id="zoomOut">−</button>
+                <button class="zoom-btn" id="resetZoom">⟲</button>
+            </div>
+        </div>
+
+        <aside class="sidebar">
+            <div class="section">
+                <h3>Color Picker</h3>
+                <div class="color-picker" id="colorPicker"></div>
+                <input type="color" id="customColor" value="#ff0000">
+            </div>
+
+            <div class="section">
+                <h3>Placement Options</h3>
+                <div class="ad-toggle">
+                    <input type="checkbox" id="isAdCheckbox">
+                    <label for="isAdCheckbox">Mark as Advertisement</label>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Selected Pixel</h3>
+                <div class="pixel-info" id="pixelInfo">
+                    <p class="no-pixel-selected">Click a pixel to select it</p>
+                </div>
+            </div>
+
+            <button class="place-btn" id="placeBtn" disabled>Place Pixel</button>
+            
+            <div class="section" style="margin-top: 1rem;">
+                <button class="undo-btn" id="undoBtn" disabled>Undo Last Placement</button>
+                <button class="report-btn" id="reportBtn" disabled>Report Pixel</button>
+            </div>
+        </aside>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Configuration
+        const BOARD_SIZE = 1024;
+        const CANVAS_SIZE = 800; // Display size
+        const API_BASE = '';
+        const UNDO_WINDOW_MS = 300000; // 5 minutes
+
+        // State
+        let currentUser = null;
+        let selectedColor = '#ff0000';
+        let selectedPixel = null;
+        let boardData = [];
+        let zoomLevel = 1;
+        let panX = 0;
+        let panY = 0;
+        let lastPlacementId = null;
+        let lastPlacementTime = null;
+
+        // DOM elements
+        const canvas = document.getElementById('pixelCanvas');
+        const ctx = canvas.getContext('2d');
+        const customColorInput = document.getElementById('customColor');
+        const isAdCheckbox = document.getElementById('isAdCheckbox');
+        const placeBtn = document.getElementById('placeBtn');
+        const pixelInfoDiv = document.getElementById('pixelInfo');
+        const notification = document.getElementById('notification');
+        const creditDisplay = document.getElementById('creditDisplay');
+        const loginBtn = document.getElementById('loginBtn');
+        const buyCreditsBtn = document.getElementById('buyCreditsBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const reportBtn = document.getElementById('reportBtn');
+
+        // Initialize canvas
+        canvas.width = CANVAS_SIZE;
+        canvas.height = CANVAS_SIZE;
+
+        // Preset colors
+        const presetColors = [
+            '#FF0000', '#00FF00', '#0000FF', '#FFFF00',
+            '#FF00FF', '#00FFFF', '#FFFFFF', '#000000',
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
+            '#98D8C8', '#F7DC6F', '#BB8FCE', '#85929E'
+        ];
+
+        // Initialize color picker
+        const colorPicker = document.getElementById('colorPicker');
+        presetColors.forEach(color => {
+            const div = document.createElement('div');
+            div.className = 'color-option';
+            div.style.backgroundColor = color;
+            div.onclick = () => selectColor(color);
+            colorPicker.appendChild(div);
+        });
+
+        function selectColor(color) {
+            selectedColor = color;
+            customColorInput.value = color;
+            document.querySelectorAll('.color-option').forEach(el => {
+                el.classList.toggle('selected', el.style.backgroundColor === rgbToHex(color));
+            });
+        }
+
+        function rgbToHex(color) {
+            // Convert any color format to hex
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 1;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = color;
+            return ctx.fillStyle;
+        }
+
+        customColorInput.addEventListener('input', (e) => {
+            selectColor(e.target.value);
+        });
+
+        // Initialize with first color
+        selectColor(presetColors[0]);
+
+        // Mock login (for Phase 2, will be replaced with real auth)
+        loginBtn.addEventListener('click', async () => {
+            const username = prompt('Enter username (demo):');
+            if (!username) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/user/create?username=${username}&initial_credits=500000`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUser = data;
+                    creditDisplay.textContent = `Credits: ${data.credits.toLocaleString()}`;
+                    loginBtn.textContent = username;
+                    loginBtn.disabled = true;
+                    buyCreditsBtn.style.display = 'inline-block';
+                    showNotification('Logged in successfully!', 'success');
+                } else {
+                    // User might already exist, try to fetch
+                    showNotification('Using existing account', 'success');
+                    currentUser = { user_id: 1, username: username, credits: 500000 };
+                    creditDisplay.textContent = `Credits: 500000`;
+                    loginBtn.textContent = username;
+                    loginBtn.disabled = true;
+                    buyCreditsBtn.style.display = 'inline-block';
+                }
+            } catch (error) {
+                showNotification('Login failed', 'error');
+            }
+        });
+
+        // Buy Credits button
+        buyCreditsBtn.addEventListener('click', async () => {
+            if (!currentUser) return;
+            
+            const packageChoice = prompt('Choose package:\n1. $5 - 50k credits\n2. $10 - 110k credits (10% bonus)\n3. $20 - 250k credits (25% bonus)\n\nEnter 1, 2, or 3:');
+            
+            const packageMap = {
+                '1': 'small',
+                '2': 'medium',
+                '3': 'large'
+            };
+            
+            const selectedPackage = packageMap[packageChoice];
+            
+            if (!selectedPackage) {
+                showNotification('Invalid choice', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/create-checkout-session?user_id=${currentUser.user_id}&package=${selectedPackage}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.checkout_url) {
+                    // Redirect to Stripe checkout
+                    window.location.href = data.checkout_url;
+                } else {
+                    showNotification('Failed to create checkout session', 'error');
+                }
+            } catch (error) {
+                showNotification('Error creating checkout session', 'error');
+            }
+        });
+
+        // Load board data
+        async function loadBoard() {
+            try {
+                const response = await fetch(`${API_BASE}/board`);
+                const data = await response.json();
+                boardData = data.pixels;
+                drawBoard();
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            } catch (error) {
+                console.error('Failed to load board:', error);
+                showNotification('Failed to load canvas', 'error');
+            }
+        }
+
+        // Load and update reset timer
+        async function loadResetTimer() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const stats = await response.json();
+                updateResetTimer(stats.week_start);
+            } catch (error) {
+                console.error('Failed to load reset timer:', error);
+            }
+        }
+
+        // Update reset timer display
+        function updateResetTimer(weekStartISO) {
+            const weekStart = new Date(weekStartISO);
+            const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+            
+            function updateDisplay() {
+                const now = new Date();
+                const timeLeft = weekEnd - now;
+                
+                if (timeLeft <= 0) {
+                    document.getElementById('resetTimer').textContent = 'Reset: 0:00:00:00';
+                    return;
+                }
+                
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                document.getElementById('resetTimer').textContent = 
+                    `Reset: ${days}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            updateDisplay();
+            setInterval(updateDisplay, 1000);
+        }
+
+        // Draw board
+        function drawBoard() {
+            ctx.save();
+            ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            
+            // Apply zoom and pan
+            ctx.translate(panX, panY);
+            ctx.scale(zoomLevel, zoomLevel);
+            
+            // Background
+            ctx.fillStyle = '#16161f';
+            ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            
+            // Draw grid for zoomed view
+            if (zoomLevel > 4) {
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+                ctx.lineWidth = 0.5 / zoomLevel;
+                const pixelSize = CANVAS_SIZE / BOARD_SIZE;
+                for (let i = 0; i <= BOARD_SIZE; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * pixelSize, 0);
+                    ctx.lineTo(i * pixelSize, CANVAS_SIZE);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, i * pixelSize);
+                    ctx.lineTo(CANVAS_SIZE, i * pixelSize);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw pixels
+            const pixelSize = CANVAS_SIZE / BOARD_SIZE;
+            boardData.forEach(pixel => {
+                ctx.fillStyle = pixel.color;
+                ctx.fillRect(
+                    pixel.x * pixelSize,
+                    pixel.y * pixelSize,
+                    pixelSize,
+                    pixelSize
+                );
+            });
+            
+            // Highlight selected pixel
+            if (selectedPixel && zoomLevel > 2) {
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 2 / zoomLevel;
+                ctx.shadowColor = '#00ffff';
+                ctx.shadowBlur = 10 / zoomLevel;
+                ctx.strokeRect(
+                    selectedPixel.x * pixelSize,
+                    selectedPixel.y * pixelSize,
+                    pixelSize,
+                    pixelSize
+                );
+                ctx.shadowBlur = 0;
+            }
+            
+            ctx.restore();
+        }
+
+        // Canvas mouse events
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let hasMoved = false;
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0) { // Left click
+                isDragging = true;
+                hasMoved = false;
+                const rect = canvas.getBoundingClientRect();
+                dragStartX = e.clientX - rect.left;
+                dragStartY = e.clientY - rect.top;
+                e.preventDefault();
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            if (isDragging) {
+                const dx = mouseX - dragStartX;
+                const dy = mouseY - dragStartY;
+                
+                // If moved more than 3 pixels, consider it a drag
+                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                    hasMoved = true;
+                    canvas.style.cursor = 'grabbing';
+                }
+                
+                if (hasMoved) {
+                    panX += dx;
+                    panY += dy;
+                    dragStartX = mouseX;
+                    dragStartY = mouseY;
+                    drawBoard();
+                }
+                return;
+            }
+
+            // Just hovering - show which pixel would be selected
+            const x = (mouseX - panX) / zoomLevel;
+            const y = (mouseY - panY) / zoomLevel;
+            const pixelX = Math.floor(x / (CANVAS_SIZE / BOARD_SIZE));
+            const pixelY = Math.floor(y / (CANVAS_SIZE / BOARD_SIZE));
+
+            if (pixelX >= 0 && pixelX < BOARD_SIZE && pixelY >= 0 && pixelY < BOARD_SIZE) {
+                // Show pixel info on hover but don't select
+                updatePixelInfo(pixelX, pixelY);
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (isDragging && !hasMoved && e.button === 0) {
+                // It was a click, not a drag - select the pixel
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const x = (mouseX - panX) / zoomLevel;
+                const y = (mouseY - panY) / zoomLevel;
+                const pixelX = Math.floor(x / (CANVAS_SIZE / BOARD_SIZE));
+                const pixelY = Math.floor(y / (CANVAS_SIZE / BOARD_SIZE));
+
+                if (pixelX >= 0 && pixelX < BOARD_SIZE && pixelY >= 0 && pixelY < BOARD_SIZE) {
+                    selectedPixel = { x: pixelX, y: pixelY };
+                    updatePixelInfo(pixelX, pixelY);
+                    placeBtn.disabled = !currentUser;
+                    reportBtn.disabled = !currentUser;
+                    drawBoard();
+                }
+            }
+            
+            isDragging = false;
+            hasMoved = false;
+            canvas.style.cursor = 'crosshair';
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            hasMoved = false;
+            canvas.style.cursor = 'crosshair';
+        });
+
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Get world position before zoom
+            const worldX = (mouseX - panX) / zoomLevel;
+            const worldY = (mouseY - panY) / zoomLevel;
+            
+            // Update zoom
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const newZoom = Math.max(0.5, Math.min(20, zoomLevel * delta));
+            
+            // Adjust pan to keep mouse position fixed
+            panX = mouseX - worldX * newZoom;
+            panY = mouseY - worldY * newZoom;
+            
+            zoomLevel = newZoom;
+            drawBoard();
+        });
+
+        // Update pixel info on hover
+        function updatePixelInfo(x, y) {
+            const pixel = boardData.find(p => p.x === x && p.y === y);
+            
+            if (pixel) {
+                const costInDollars = (1000 + pixel.cost_level) / 100000;
+                pixelInfoDiv.innerHTML = `
+                    <p><strong>Position:</strong> ${x}, ${y}</p>
+                    <p><strong>Color:</strong> ${pixel.color}</p>
+                    <p><strong>Cost:</strong> $${costInDollars.toFixed(2)}</p>
+                    <p><strong>Owner ID:</strong> ${pixel.owner_id || 'None'}</p>
+                    <p><strong>Is Ad:</strong> ${pixel.is_ad ? 'Yes' : 'No'}</p>
+                `;
+            } else {
+                const baseCost = 1000 / 100000;
+                pixelInfoDiv.innerHTML = `
+                    <p><strong>Position:</strong> ${x}, ${y}</p>
+                    <p><strong>Status:</strong> Empty</p>
+                    <p><strong>Cost:</strong> $${baseCost.toFixed(2)}</p>
+                `;
+            }
+        }
+
+        // Center camera on a pixel
+        function centerOnPixel(x, y) {
+            const pixelSize = CANVAS_SIZE / BOARD_SIZE;
+            const worldX = (x + 0.5) * pixelSize;
+            const worldY = (y + 0.5) * pixelSize;
+            
+            panX = CANVAS_SIZE / 2 - worldX * zoomLevel;
+            panY = CANVAS_SIZE / 2 - worldY * zoomLevel;
+            
+            drawBoard();
+        }
+
+        // Place pixel
+        placeBtn.addEventListener('click', async () => {
+            if (!currentUser || !selectedPixel) return;
+
+            placeBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/place`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentUser.user_id,
+                        x: selectedPixel.x,
+                        y: selectedPixel.y,
+                        color: selectedColor,
+                        is_ad: isAdCheckbox.checked
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification(`Pixel placed! Cost: ${result.cost} credits`, 'success');
+                    currentUser.credits = result.new_balance;
+                    creditDisplay.textContent = `Credits: ${result.new_balance.toLocaleString()}`;
+                    
+                    // Store for undo
+                    lastPlacementId = result.placement_id;
+                    lastPlacementTime = Date.now();
+                    undoBtn.disabled = false;
+                    
+                    // Update local board data
+                    const existingIndex = boardData.findIndex(p => p.x === selectedPixel.x && p.y === selectedPixel.y);
+                    const newPixel = {
+                        x: selectedPixel.x,
+                        y: selectedPixel.y,
+                        color: selectedColor,
+                        cost_level: result.cost,
+                        owner_id: currentUser.user_id,
+                        is_ad: isAdCheckbox.checked
+                    };
+                    
+                    if (existingIndex >= 0) {
+                        boardData[existingIndex] = newPixel;
+                    } else {
+                        boardData.push(newPixel);
+                    }
+                    
+                    // Center camera on placed pixel if zoomed in
+                    if (zoomLevel > 2) {
+                        centerOnPixel(selectedPixel.x, selectedPixel.y);
+                    } else {
+                        drawBoard();
+                    }
+                } else {
+                    showNotification(result.detail || 'Failed to place pixel', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error', 'error');
+            } finally {
+                setTimeout(() => {
+                    placeBtn.disabled = false;
+                }, 1000);
+            }
+        });
+
+        // Undo button
+        undoBtn.addEventListener('click', async () => {
+            if (!currentUser || !lastPlacementId) return;
+            
+            // Check if still within undo window
+            if (Date.now() - lastPlacementTime > UNDO_WINDOW_MS) {
+                showNotification('Undo window expired (5 minutes)', 'error');
+                undoBtn.disabled = true;
+                return;
+            }
+            
+            undoBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/undo/${lastPlacementId}?user_id=${currentUser.user_id}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showNotification(`Undone! Cost: ${result.undo_cost} credits`, 'success');
+                    currentUser.credits = result.new_balance;
+                    creditDisplay.textContent = `Credits: ${result.new_balance.toLocaleString()}`;
+                    
+                    // Reload board
+                    await loadBoard();
+                    lastPlacementId = null;
+                } else {
+                    showNotification(result.detail || 'Undo failed', 'error');
+                    undoBtn.disabled = false;
+                }
+            } catch (error) {
+                showNotification('Network error', 'error');
+                undoBtn.disabled = false;
+            }
+        });
+
+        // Report button
+        reportBtn.addEventListener('click', async () => {
+            if (!currentUser || !selectedPixel) return;
+            
+            const reason = prompt('Reason for report (optional):');
+            if (reason === null) return; // User cancelled
+            
+            reportBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/report?user_id=${currentUser.user_id}&x=${selectedPixel.x}&y=${selectedPixel.y}&reason=${encodeURIComponent(reason)}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    if (result.board_frozen) {
+                        showNotification(`Reported! Board frozen (${result.report_count} reports)`, 'error');
+                    } else {
+                        showNotification(`Pixel reported (${result.report_count}/${2500} this week)`, 'success');
+                    }
+                } else {
+                    showNotification(result.detail || 'Report failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error', 'error');
+            } finally {
+                setTimeout(() => {
+                    reportBtn.disabled = false;
+                }, 2000);
+            }
+        });
+
+        // Check undo window periodically
+        setInterval(() => {
+            if (lastPlacementId && lastPlacementTime) {
+                if (Date.now() - lastPlacementTime > UNDO_WINDOW_MS) {
+                    undoBtn.disabled = true;
+                    lastPlacementId = null;
+                }
+            }
+        }, 1000);
+
+        // Zoom controls
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            zoomLevel = Math.min(20, zoomLevel * 1.5);
+            drawBoard();
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            zoomLevel = Math.max(0.5, zoomLevel / 1.5);
+            drawBoard();
+        });
+
+        document.getElementById('resetZoom').addEventListener('click', () => {
+            zoomLevel = 1;
+            panX = 0;
+            panY = 0;
+            drawBoard();
+        });
+
+        // Show notification
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize
+        loadBoard();
+        loadResetTimer();
+        
+        // Refresh board every 10 seconds
+        setInterval(loadBoard, 10000);
+    </script>
+</body>
+</html>
