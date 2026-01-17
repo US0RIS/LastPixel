@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LastPixel - Collaborative Pixel Canvas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-mid: #16161f;
+            --accent-cyan: #00ffff;
+            --accent-pink: #ff006e;
+            --accent-yellow: #ffbe0b;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --grid-color: rgba(0, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header */
+        header {
+            padding: 2rem 0;
+            border-bottom: 2px solid var(--accent-cyan);
+            position: relative;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink), var(--accent-yellow));
+            animation: borderSlide 3s linear infinite;
+        }
+
+        @keyframes borderSlide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            animation: glitch 3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-2px, 2px); }
+            94% { transform: translate(2px, -2px); }
+            96% { transform: translate(-1px, 1px); }
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-cyan);
+            transition: width 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--accent-cyan);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            padding: 6rem 0;
+            min-height: 80vh;
+        }
+
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+                padding: 3rem 0;
+            }
+        }
+
+        .hero-text h2 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-text h2 span {
+            display: block;
+            color: var(--accent-pink);
+            font-style: italic;
+        }
+
+        .hero-text p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        .tagline {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-yellow);
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1.2rem 3rem;
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
+        }
+
+        .cta-button:active {
+            transform: translateY(0);
+        }
+
+        /* Canvas Preview */
+        .canvas-preview {
+            position: relative;
+            aspect-ratio: 1;
+            max-width: 600px;
+            background: var(--bg-mid);
+            border: 4px solid var(--accent-cyan);
+            box-shadow: 
+                0 0 40px rgba(0, 255, 255, 0.3),
+                inset 0 0 60px rgba(0, 255, 255, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .canvas-preview:hover {
+            transform: scale(1.02) rotate(0.5deg);
+            box-shadow: 
+                0 0 60px rgba(0, 255, 255, 0.5),
+                inset 0 0 60px rgba(0, 255, 255, 0.15);
+        }
+
+        .canvas-preview::after {
+            content: 'CLICK TO ENTER';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1rem;
+            color: var(--accent-cyan);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+
+        .canvas-preview:hover::after {
+            opacity: 1;
+        }
+
+        #canvasPreview {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            padding: 3rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 2rem;
+            color: var(--accent-cyan);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 6rem;
+            padding: 2rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1>LastPixel</h1>
+                <nav>
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="/leaderboards.html">Leaderboards</a>
+                    <a href="/archives.html">Archives</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="hero">
+                <div class="hero-text">
+                    <h2>
+                        The Pixel Wars
+                        <span>Never End</span>
+                    </h2>
+                    <p class="tagline">Collaborative pixel art that never stops evolving</p>
+                    <p>
+                        Create art. Collaborate with others. Defend your creations. 
+                        Every pixel tells a story. Every canvas is a battleground of creativity. Weekly resets bring fresh beginnings.
+                    </p>
+                    <a href="/canvas.html" class="cta-button">Enter Canvas</a>
+                </div>
+                
+                <div class="canvas-preview" onclick="window.location.href='/canvas.html'">
+                    <canvas id="canvasPreview"></canvas>
+                    <div class="loading" id="loadingIndicator">Loading...</div>
+                </div>
+            </section>
+
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value" id="totalPixels">0</span>
+                    <span class="stat-label">Pixels Placed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="weekPlacements">0</span>
+                    <span class="stat-label">This Week</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="canvasValue">$0.00</span>
+                    <span class="stat-label">Canvas Value</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="resetTimer">--:--:--:--</span>
+                    <span class="stat-label">Next Reset</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>LastPixel &copy; 2026 — Where every pixel is a story. Where art never stops.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Fetch and display board preview
+        async function loadBoardPreview() {
+            try {
+                const response = await fetch('/board');
+                const data = await response.json();
+                
+                const canvas = document.getElementById('canvasPreview');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size (downscale for preview)
+                const previewSize = 512;
+                canvas.width = previewSize;
+                canvas.height = previewSize;
+                
+                const scale = previewSize / data.width;
+                
+                // Fill with dark background
+                ctx.fillStyle = '#16161f';
+                ctx.fillRect(0, 0, previewSize, previewSize);
+                
+                // Draw pixels
+                data.pixels.forEach(pixel => {
+                    ctx.fillStyle = pixel.color;
+                    ctx.fillRect(
+                        Math.floor(pixel.x * scale),
+                        Math.floor(pixel.y * scale),
+                        Math.ceil(scale),
+                        Math.ceil(scale)
+                    );
+                });
+                
+                document.getElementById('loadingIndicator').style.display = 'none';
+            } catch (error) {
+                console.error('Failed to load board preview:', error);
+                document.getElementById('loadingIndicator').textContent = 'Preview Unavailable';
+            }
+        }
+
+        // Fetch stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalPixels').textContent = 
+                    stats.total_pixels_placed.toLocaleString();
+                document.getElementById('weekPlacements').textContent = 
+                    stats.week_placements.toLocaleString();
+                
+                // Calculate total canvas value (base $0.01 per pixel)
+                const canvasValue = (stats.total_pixels_placed * 0.01).toFixed(2);
+                document.getElementById('canvasValue').textContent = 
+                    '$' + parseFloat(canvasValue).toLocaleString();
+                
+                // Calculate and display reset timer
+                updateResetTimer(stats.week_start);
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Update reset timer
+        function updateResetTimer(weekStartISO) {
+            const weekStart = new Date(weekStartISO);
+            const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+            
+            function updateDisplay() {
+                const now = new Date();
+                const timeLeft = weekEnd - now;
+                
+                if (timeLeft <= 0) {
+                    document.getElementById('resetTimer').textContent = '0:00:00:00';
+                    return;
+                }
+                
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                document.getElementById('resetTimer').textContent = 
+                    `${days}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            updateDisplay();
+            setInterval(updateDisplay, 1000);
+        }
+
+        // Load on page load
+        loadBoardPreview();
+        loadStats();
+        
+        // Refresh preview every 30 seconds
+        setInterval(loadBoardPreview, 30000);
+    </script>
+</body>
+</html>
